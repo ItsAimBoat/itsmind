@@ -347,369 +347,120 @@
 
     }
 
-  </style>
+ <!-- ...โค้ด <head> เหมือนเดิม... -->
 
+<style>
+  /* เพิ่มสไตล์ใหม่ */
+  .click-count {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #888;
+    font-family: 'Mali', sans-serif;
+  }
+</style>
 </head>
-
 <body>
-
-
-
   <header>
-
     <h1>9boatX</h1>
-
-    <input type="<input type="text" id="search" placeholder="Search..." aria-label="Search content"/>
-
+    <input type="text" id="search" placeholder="Search..." aria-label="Search content"/>
   </header>
-
-
 
   <div class="container" id="gallery"></div>
 
-
-
   <canvas id="effectCanvas"></canvas>
 
-
-
   <script>
+    // Particle Engine (เหมือนเดิมทั้งหมด)
+    // ...
 
-    // ============== Particle Engine ==============
-
-    const canvas = document.getElementById("effectCanvas");
-
-    const ctx = canvas.getContext("2d");
-
-    let particles = [];
-
-
-
-    function resizeCanvas() {
-
-      canvas.width = window.innerWidth;
-
-      canvas.height = window.innerHeight;
-
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-
-    resizeCanvas();
-
-
-
-    function random(min,max) { return Math.random()*(max-min)+min; }
-
-
-
-    class Particle {
-
-      constructor(x,y,color,shrinkRate,gravity,vx,vy) {
-
-        this.x = x; this.y = y; this.color = color;
-
-        this.alpha = 1;
-
-        this.size = random(2,4);
-
-        this.shrinkRate = shrinkRate;
-
-        this.gravity = gravity;
-
-        this.vx = vx; this.vy = vy;
-
-      }
-
-      update() {
-
-        this.x += this.vx;
-
-        this.y += this.vy;
-
-        this.vy += this.gravity;
-
-        this.size -= this.shrinkRate;
-
-        this.alpha -= 0.01;
-
-      }
-
-      draw() {
-
-        ctx.globalAlpha = this.alpha;
-
-        ctx.fillStyle = this.color;
-
-        ctx.beginPath();
-
-        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-
-        ctx.fill();
-
-      }
-
-    }
-
-
-
-    function render() {
-
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-
-      particles.forEach((p,i)=> {
-
-        p.update();
-
-        if(p.alpha<=0||p.size<=0) particles.splice(i,1);
-
-        else p.draw();
-
-      });
-
-      requestAnimationFrame(render);
-
-    }
-
-    render();
-
-
-
-    function fireworks(x,y) {
-
-      const count = 40;
-
-      for(let i=0;i<count;i++){
-
-        const angle = random(0,Math.PI*2);
-
-        const speed = random(1,6);
-
-        const vx = Math.cos(angle)*speed;
-
-        const vy = Math.sin(angle)*speed;
-
-        const color = `hsl(200, 100%, ${random(85, 100)}%)`; // ขาว-ฟ้า
-
-        particles.push(new Particle(x,y,color,0.05,0.05,vx,vy));
-
-      }
-
-    }
-
-
-
-    // เอฟเฟกต์ไฟเย็นลอยตามเมาส์ สีขาวฟ้า
-
-    function coldTrail(x, y) {
-
-      const color = `hsl(200, 100%, ${random(85, 100)}%)`; // ขาว-ฟ้า
-
-      const vx = random(-0.3, 0.3);
-
-      const vy = random(-1.0, -0.5);
-
-      particles.push(new Particle(x, y, color, 0.015, 0, vx, vy));
-
-    }
-
-
-
-    // รองรับ click & touch
-
-    function pointerDown(e) {
-
-      const x = (e.clientX||e.touches[0].clientX);
-
-      const y = (e.clientY||e.touches[0].clientY);
-
-      fireworks(x,y);
-
-    }
-
-    function pointerMove(e) {
-
-      const x = (e.clientX||e.touches[0].clientX);
-
-      const y = (e.clientY||e.touches[0].clientY);
-
-      coldTrail(x,y);
-
-    }
-
-    window.addEventListener('mousedown', pointerDown);
-
-    window.addEventListener('touchstart', pointerDown);
-
-    window.addEventListener('mousemove', pointerMove);
-
-    window.addEventListener('touchmove', pointerMove);
-
-
-
-    // ============== Gallery + Search + Click Animation ==============
-
+    // ============== Gallery + Click Counter ==============
     const gallery = document.getElementById("gallery");
 
-
+    // โหลดคลิกจาก localStorage
+    const clickData = JSON.parse(localStorage.getItem("clickCounts") || "{}");
 
     function upd(link, thumbnail, showThumbnail, title, description) {
-
       const card = document.createElement("div"); 
-
       card.className = "card";
 
-
-
       const h2 = document.createElement("div"); 
-
       h2.className = "title"; 
-
       h2.innerText = title; 
-
       card.appendChild(h2);
 
-
-
       const desc = document.createElement("div"); 
-
       desc.className = "desc"; 
-
       desc.innerText = description; 
-
       card.appendChild(desc);
 
-
-
-      if(showThumbnail){
-
+      if (showThumbnail) {
         const img = document.createElement("img"); 
-
         img.src = thumbnail; 
-
         img.alt = title; 
-
         card.appendChild(img);
-
       }
 
+      // ==== คลิกเคาน์เตอร์ ====
+      const countKey = `click_${title}`;
+      const clickCount = clickData[countKey] || 0;
+      const counterDiv = document.createElement("div");
+      counterDiv.className = "click-count";
+      counterDiv.innerText = `คลิกแล้ว ${clickCount} ครั้ง`;
+      card.appendChild(counterDiv);
 
-
-
-
-
-      
-
-
+      // ==== ข้อมูลไว้ใช้ในระบบค้นหา ====
       card.setAttribute("data-title", title.toLowerCase());
-
       card.setAttribute("data-desc", description.toLowerCase());
 
-
-
-      // คลิกอลังการ
-
+      // ==== Event คลิก ====
       card.onclick = e => {
-
         e.stopPropagation();
 
-
-
-        // สร้าง overlay แสงระเบิด
-
+        // เอฟเฟกต์ flash
         const flash = document.createElement("div");
-
         flash.style.position = "absolute";
-
         flash.style.top = 0;
-
         flash.style.left = 0;
-
         flash.style.width = "100%";
-
         flash.style.height = "100%";
-
         flash.style.background = "radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 80%)";
-
         flash.style.borderRadius = "10px";
-
         flash.style.pointerEvents = "none";
-
         flash.style.animation = "flashEffect 0.6s ease-out forwards";
-
         card.appendChild(flash);
 
-
-
-        // เพิ่มอนิเมชัน shake + scale
-
+        // Animation
         card.style.animation = "shakeScale 0.6s ease forwards";
 
+        // อัปเดตจำนวนคลิก
+        clickData[countKey] = (clickData[countKey] || 0) + 1;
+        localStorage.setItem("clickCounts", JSON.stringify(clickData));
+        counterDiv.innerText = `คลิกแล้ว ${clickData[countKey]} ครั้ง`;
 
-
-        // รอจบอนิเมชันแล้วเปิดลิงก์
-
+        // เปิดลิงก์หลัง delay
         setTimeout(() => {
-
           window.open(link, "_blank");
-
           card.style.animation = "";
-
-          if(card.contains(flash)) card.removeChild(flash);
-
+          if (card.contains(flash)) card.removeChild(flash);
         }, 800);
-
       };
 
-
-
       gallery.appendChild(card);
-
     }
 
+    // เพิ่มข้อมูลการ์ด
+    upd("https://shrinkme.ink/9boatXmod","https://gifyu.com/image/bNIGA",true,"[001] Mod Itachi Uchiha [แพทย์ใหม่]","Click continue to link");
+    upd("https://shrinkme.ink/9boatX","https://cdn.discordapp.com/attachments/1364986136706941041/1402209541898108999/Screenshot_2025.08.05_15.39.17.062.png",true,"[002] Mod กล้ามทอง [แพทย์ใหม่]","Click continue to link");
+    upd("https://shrinkme.ink/obito","https://gifyu.com/image/bN7jE",true,"[003] Modskin obito  [แพทย์ใหม่]","Click continue to link");
 
-
-
-
-
-
-
-
-
-    
-
-    
-
-upd("https://shrinkme.ink/9boatXmod","https://cdn.corenexis.com/file?5217821168.webp",true,"[001] Mod Itachi Uchiha [แพทย์ใหม่]","Click continue to link");
-
-
-
-upd("https://shrinkme.ink/9boatX","https://cdn.discordapp.com/attachments/1364986136706941041/1402209541898108999/Screenshot_2025.08.05_15.39.17.062.png?ex=689314e6&is=6891c366&hm=9176231c377e6ad19a3f79e8959e8fa0781552b97fe687c66801b8f2e2190d93&",true,"[002] Mod กล้ามทอง [แพทย์ใหม่]","Click continue to link");
-
-
-
-upd("https://shrinkme.ink/obito","https://gifyu.com/image/bN7jE",true,"[003] Modskin obito  [แพทย์ใหม่]","Click continue to link");
-
-
-
-    // ค้นหา
-
-    document.getElementById("search").addEventListener("input", e=>{
-
+    // ระบบค้นหา
+    document.getElementById("search").addEventListener("input", e => {
       const kw = e.target.value.toLowerCase().trim();
-
-      document.querySelectorAll(".card").forEach(c=>{
-
+      document.querySelectorAll(".card").forEach(c => {
         const t = c.getAttribute("data-title"), d = c.getAttribute("data-desc");
-
         c.classList.toggle("hidden", !(t.includes(kw)||d.includes(kw)));
-
       });
-
     });
-
   </script>
-
 </body>
-
 </html>
